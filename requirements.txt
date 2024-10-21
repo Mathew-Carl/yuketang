@@ -1,0 +1,8 @@
+asyncio
+PyPDF2
+pytz
+requests
+websockets
+qrcode
+Pillow
+pyzbar
