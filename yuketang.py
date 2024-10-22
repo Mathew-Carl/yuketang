@@ -535,6 +535,7 @@ class yuketang:
                         flag_si=0
             self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 连接关闭")
             del self.lessonIdDict[lessonId]
+            self.shared_answers = {}
 
     async def lesson_attend(self):
         tasks = [asyncio.create_task(self.ws_lesson(lessonId)) for lessonId in self.lessonIdNewList]
