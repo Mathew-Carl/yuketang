@@ -1,4 +1,4 @@
-![001BB283](https://github.com/user-attachments/assets/e1c15cfb-eb6e-40ec-8e08-d38b5a63665c)# yuketang
+# yuketang
 雨课堂多用户版本, 支持自动签到, 自动答题(自动获取其他用户答案)
 
 
