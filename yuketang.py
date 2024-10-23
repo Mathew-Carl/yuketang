@@ -494,17 +494,13 @@ class yuketang:
                     if self.an:
                         while True:
                             try:
-                                # 检查问题的状态
-                                problem_status = self.lessonIdDict[lessonId].get('problem_status')
-
-                                # 如果问题结束，则发送消息并退出循环
-                                if problem_status == "problemfinished":
+                                if op == "problemfinished":
                                     self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 问题已结束，停止回答")
                                     break
-
+                                
                                 # 获取幻灯片信息，处理可能的异常
                                 self.fetch_presentation(lessonId)
-                                await asyncio.sleep(3)
+                                await asyncio.sleep(2)
 
                                 # 检查当前问题的答案是否存在，如果存在则提交
                                 if self.lessonIdDict[lessonId]['problems'][self.lessonIdDict[lessonId]['problemId']].get('answers'):
