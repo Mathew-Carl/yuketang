@@ -261,6 +261,54 @@ class yuketang:
             else:
                 self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 签到失败")
     
+    def fetch_answers(self, lessonId):
+        url = f"https://{domain}/api/v3/lesson/presentation/fetch?presentation_id={self.lessonIdDict[lessonId]['presentation']}"
+        headers = {
+            "referer": f"https://{domain}/lesson/fullscreen/v3/{lessonId}?source=5",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+            "cookie": self.cookie,
+            "Authorization": self.lessonIdDict[lessonId]['Authorization']
+        }
+        res=requests.get(url, headers=headers, timeout=timeout)
+        self.setAuthorization(res, lessonId)
+        info = res.json()
+        slides=info['data']['slides']    #获得幻灯片列表
+        for slide in slides:
+            if slide.get("problem") is not None:  
+                self.lessonIdDict[lessonId]['problems'][slide['id']]=slide['problem']
+                self.lessonIdDict[lessonId]['problems'][slide['id']]['index']=slide['index'] 
+                if slide['problem']['body'] == '':
+                    shapes = slide.get('shapes', [])
+                    if shapes:
+                        min_left_item = min(shapes, key=lambda item: item.get('Left', 9999999))
+                        if min_left_item != 9999999 and min_left_item.get('Text') is not None:
+                            self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = min_left_item['Text']
+                        else:
+                            self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = '未知问题'
+                    else:
+                        self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = '未知问题'
+                    
+                shared_answer = self.shared_answers.get(slide['id'])
+                if shared_answer is not None:
+                    self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = shared_answer
+                    self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n检测到共享答案: {shared_answer}")
+                    continue  # 跳过后续逻辑，直接使用共享答案     
+                elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 5:
+                    if self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] in [[],None,'null'] and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
+                        self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
+                elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 4:
+                    num_blanks = len(self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks'])
+                    if not check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], num_blanks):
+                        if check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], num_blanks):
+                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']   
+                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")         
+                else:
+                    if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']):
+                        self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
+        
+    
     def fetch_presentation(self, lessonId):
         url = f"https://{domain}/api/v3/lesson/presentation/fetch?presentation_id={self.lessonIdDict[lessonId]['presentation']}"
         headers = {
@@ -280,15 +328,8 @@ class yuketang:
                 self.lessonIdDict[lessonId]['problems'][slide['id']]=slide['problem']
                 self.lessonIdDict[lessonId]['problems'][slide['id']]['index']=slide['index']
                 
-                # 首先检查共享答案池中是否有答案
-                shared_answer = self.shared_answers.get((slide['id']))
-                if shared_answer is not None:
-                    # 如果共享池中有答案，直接使用共享答案
-                    self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = shared_answer
-                    self.msgmgr.sendMsg(f"检测到共享答案: {shared_answer}")
-                    continue  # 跳过后续逻辑，直接使用共享答案
 
-                
+               
                 if slide['problem']['body'] == '':
                     shapes = slide.get('shapes', [])
                     if shapes:
@@ -299,25 +340,27 @@ class yuketang:
                             self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = '未知问题'
                     else:
                         self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = '未知问题'
+                    
+                shared_answer = self.shared_answers.get(slide['id'])
+                if shared_answer is not None:
+                    self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = shared_answer
+                    self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n检测到共享答案: {shared_answer}")
+                    continue  # 跳过后续逻辑，直接使用共享答案
+                
                 if self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 5:
                     if self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] in [[],None,'null'] and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
-                        self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
                         self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
                 elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 4:
                     num_blanks = len(self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks'])
                     if not check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], num_blanks):
-                        answers = []
-                        for blank in self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks']:
-                            answers.extend(blank['answers'])
-                        if check_answers_in_blanks(answers, num_blanks):
-                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = answers
-                        elif check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], num_blanks):
-                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] 
-                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']            
+                        if check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], num_blanks):
+                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']   
+                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")         
                 else:
-                    if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']):
-                        self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                    if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
                         self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
         if self.lessonIdDict[lessonId]['problems']=={}:
             self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n问题列表: 无")
         else:
@@ -466,9 +509,6 @@ class yuketang:
                         self.lessonIdDict[lessonId]['si']=server_response['slide']['si']
                     if server_response.get('unlockedproblem'):
                         self.lessonIdDict[lessonId]['unlockedproblem']=server_response['unlockedproblem']
-                elif op == "problemfinished":
-                    self.lessonIdDict[lessonId]['problem_status'] = "problemfinished"
-                    self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 检测到问题已结束")
                 elif op=="unlockproblem":
                     if server_response['problem'].get('pres'):
                         if flag_ppt==0 and self.lessonIdDict[lessonId]['presentation'] != server_response['problem']['pres']:
@@ -492,31 +532,34 @@ class yuketang:
                         text_result += "答案: 暂无\n"
                     self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n解锁问题:\n{text_result}")
                     if self.an:
+                        if flag_ppt==1 and self.lessonIdDict[lessonId].get('presentation') is not None:
+                            flag_ppt=0
+                            self.fetch_presentation(lessonId)
+                        
+                        start_time = time.time()  # 记录循环开始时间
+                        time_limit = 180  # 3 分钟的时间限制
+                        
                         while True:
                             try:
-                                if op == "problemfinished":
-                                    self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 问题已结束，停止回答")
-                                    break
-                                
                                 # 获取幻灯片信息，处理可能的异常
-                                self.fetch_presentation(lessonId)
-                                await asyncio.sleep(2)
+                                self.fetch_answers(lessonId)
+                                await asyncio.sleep(5)
 
                                 # 检查当前问题的答案是否存在，如果存在则提交
                                 if self.lessonIdDict[lessonId]['problems'][self.lessonIdDict[lessonId]['problemId']].get('answers'):
                                     await self.answer(lessonId)
                                     break  # 提交答案后退出循环
-
-                            except KeyError as e:
-                                # 如果字典中没有相应的键值对，捕获 KeyError 并继续循环
-                                self.msgmgr.sendMsg(f"错误: 缺少键 {e}，跳过当前问题")
-                                continue  # 继续下一个循环
+                                
+                                elapsed_time = time.time() - start_time
+                                if elapsed_time > time_limit:
+                                    self.msgmgr.sendMsg(f"时间超过三分钟，退出循环")
+                                    break  # 超过 3 分钟后退出循环
 
                             except Exception as e:
                                 # 捕获其他所有可能的异常，记录日志并继续循环
                                 self.msgmgr.sendMsg(f"发生异常: {str(e)}，跳过当前问题")
                                 continue  # 继续下一个循环
-
+                        self.shared_answers = {}
                 elif op=="lessonfinished":
                     self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 下课了")
                     break
@@ -531,7 +574,7 @@ class yuketang:
                         flag_si=0
             self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 连接关闭")
             del self.lessonIdDict[lessonId]
-            self.shared_answers = {}
+            
 
     async def lesson_attend(self):
         tasks = [asyncio.create_task(self.ws_lesson(lessonId)) for lessonId in self.lessonIdNewList]
