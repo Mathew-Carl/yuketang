@@ -301,6 +301,7 @@ class yuketang:
                             self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
                             self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
                             self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]
+                            break
                     elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 4:
                         num_blanks = len(self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks'])
                         if not check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], num_blanks):
@@ -308,11 +309,13 @@ class yuketang:
                                 self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']   
                                 self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")  
                                 self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]      
+                                break
                     else:
                         if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']):
                             self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
                             self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
                             self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]
+                            break
  
 
     def fetch_presentation(self, lessonId):
