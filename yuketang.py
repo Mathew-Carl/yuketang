@@ -206,14 +206,14 @@ class yuketang:
                 self.lessonIdDict = {}
                 return False
             for item in online_data['data']['onLessonClassrooms']:
-                if (self.classroomWhiteList and item['classroomName'] not in self.classroomWhiteList) or item['classroomName'] in self.clashroomBlackList or (self.clashroomStartTimeDict and item['classroomName'] in self.clashroomStartTimeDict and not check_time2(self.clashroomStartTimeDict[item['classroomName']])):
+                if (self.classroomWhiteList and item['courseName'] not in self.classroomWhiteList) or item['courseName'] in self.clashroomBlackList or (self.clashroomStartTimeDict and item['courseName'] in self.clashroomStartTimeDict and not check_time2(self.clashroomStartTimeDict[item['courseName']])):
                     continue
                 lessonId = item['lessonId']
                 if lessonId not in self.lessonIdDict:
                     self.lessonIdNewList.append(lessonId)
                     self.lessonIdDict[lessonId] = {}
                     self.lessonIdDict[lessonId]['start_time'] = time.time()
-                    self.lessonIdDict[lessonId]['classroomName'] = item['classroomName']
+                    self.lessonIdDict[lessonId]['classroomName'] = item['courseName']
                 self.lessonIdDict[lessonId]['active'] = '1'
             to_delete = [lessonId for lessonId, details in self.lessonIdDict.items() if not details.get('active', '0') == '1']
             for lessonId in to_delete:
@@ -289,7 +289,7 @@ class yuketang:
                         else:
                             self.lessonIdDict[lessonId]['problems'][slide['id']]['body'] = '未知问题'
                             
-                    shared_answer = self.shared_answers.get(slide['id'])     
+                    shared_answer = yuketang.shared_answers.get(slide['id'])     
                     if shared_answer is not None:
                         self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = shared_answer
                         self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n检测到共享答案: {shared_answer}")
@@ -298,23 +298,23 @@ class yuketang:
     
                     if self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 5:
                         if self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] in [[],None,'null'] and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
-                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
-                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
-                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]
+                            yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{yuketang.shared_answers[slide['id']]}已提交到共享区")
+                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = yuketang.shared_answers[slide['id']]
                             break
                     elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 4:
                         num_blanks = len(self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks'])
                         if not check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], num_blanks):
                             if check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], num_blanks):
-                                self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']   
-                                self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")  
-                                self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]      
+                                yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']   
+                                self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{yuketang.shared_answers[slide['id']]}已提交到共享区")  
+                                self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = yuketang.shared_answers[slide['id']]      
                                 break
                     else:
                         if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']):
-                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
-                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{self.shared_answers[slide['id']]}已提交到共享区")
-                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = self.shared_answers[slide['id']]
+                            yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                            self.msgmgr.sendMsg(f"问题: {self.lessonIdDict[lessonId]['problems'][slide['id']]['body']}\n答案:{yuketang.shared_answers[slide['id']]}已提交到共享区")
+                            self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] = yuketang.shared_answers[slide['id']]
                             break
  
 
@@ -349,15 +349,15 @@ class yuketang:
                         
                 if self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 5:
                     if self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'] in [[],None,'null'] and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
-                        self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
                 elif self.lessonIdDict[lessonId]['problems'][slide['id']]['problemType'] == 4:
                     num_blanks = len(self.lessonIdDict[lessonId]['problems'][slide['id']]['blanks'])
                     if not check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], num_blanks):
                         if check_answers_in_blanks(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], num_blanks):
-                            self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']         
+                            yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']         
                 else:
                     if not check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['answers'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and check_answers_in_options(self.lessonIdDict[lessonId]['problems'][slide['id']]['result'], self.lessonIdDict[lessonId]['problems'][slide['id']]['options']) and not self.lessonIdDict[lessonId]['problems'][slide['id']]['result'] in [[],None,'null']:
-                        self.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
+                        yuketang.shared_answers[slide['id']] = self.lessonIdDict[lessonId]['problems'][slide['id']]['result']
         if self.lessonIdDict[lessonId]['problems']=={}:
             self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n问题列表: 无")
         else:
@@ -529,7 +529,7 @@ class yuketang:
                     del self.lessonIdDict[lessonId][key]
         del_dict()
         uri = f"wss://{domain}/wsapp/"
-        async with websockets.connect(uri, ping_timeout=180, ping_interval=5) as websocket:
+        async with websockets.connect(uri, ping_timeout=60, ping_interval=5) as websocket:
             # 发送 "hello" 消息以建立连接
             hello_message = {
                 "op": "hello",
@@ -631,7 +631,7 @@ class yuketang:
                         flag_si=0
             self.msgmgr.sendMsg(f"{self.lessonIdDict[lessonId]['header']}\n消息: 连接关闭")
             del self.lessonIdDict[lessonId]
-            self.shared_answers = {}
+            yuketang.shared_answers = {}
             
 
     async def lesson_attend(self):
