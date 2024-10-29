@@ -98,7 +98,7 @@ python main.py
 ### 配置文件
  - 默认设置雨课堂域名为 `pro.yuketang.cn`<br>
  - `classroomCodeList` 为班级邀请码/课堂暗号列表，每 30 秒尝试加入班级，加入成功或班级不存在将自动去除，班级满员时可启用此功能待成员退出抢占名额<br>
- - `classroomWhiteList`/`clashroomBlackList`/`clashroomStartTimeDict` 等使用的课程名，可在[雨课堂首页](https://pro.yuketang.cn/v2/web/index)课程标签里查找，具体如[图](classroomName.png)中蓝框所示，采用完全匹配，为空时不启用<br>
+ - `classroomWhiteList`/`clashroomBlackList`/`clashroomStartTimeDict` 等使用的课程名，可在[雨课堂首页](https://pro.yuketang.cn/v2/web/index)课程标签里查找，具体如[图](classroomName.png)中红框所示，采用完全匹配，为空时不启用<br>
  - `clashroomStartTimeDict` 中，1-7 代表周一-周日，当日时间值不为空且此时早于该值不签到，数字或时间为空不启用<br>
  - `yuketang` 中，`an` 设置为 `true` 时自动答题，`ppt` 设置为 `true` 时自动下载 PPT，`si` 设置为 `true` 时实时推送 PPT 进度<br>
   - users中填入需要的用户和相应的对话ID<br>
