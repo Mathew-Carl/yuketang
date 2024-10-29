@@ -491,7 +491,7 @@ class yuketang:
          while not self.stop_event.is_set():
          # 获取幻灯片信息，处理可能的异常
             self.fetch_problems(lessonId)
-            await asyncio.sleep(5)
+            await asyncio.sleep(2)
 
             # 检查当前问题的答案是否存在，如果存在则提交
             if self.lessonIdDict[lessonId]['problems'][self.lessonIdDict[lessonId]['problemId']].get('answers'):
@@ -529,7 +529,7 @@ class yuketang:
                     del self.lessonIdDict[lessonId][key]
         del_dict()
         uri = f"wss://{domain}/wsapp/"
-        async with websockets.connect(uri, ping_timeout=150, ping_interval=5) as websocket:
+        async with websockets.connect(uri, ping_timeout=180, ping_interval=15) as websocket:
             # 发送 "hello" 消息以建立连接
             hello_message = {
                 "op": "hello",
@@ -614,7 +614,13 @@ class yuketang:
                             flag_ppt=0
                             self.fetch_presentation(lessonId)
                         
-                        await asyncio.gather(self.receive_messages(lessonId), self.fetch_answers(lessonId))
+                        await asyncio.wait_for(
+                            asyncio.gather(
+                                self.receive_messages(lessonId),
+                                self.fetch_answers(lessonId)
+                            ),
+                            timeout=420  # 设置超时时间为 7 分钟
+                        )
                         self.stop_event.clear()
                         
                 elif op=="lessonfinished":
