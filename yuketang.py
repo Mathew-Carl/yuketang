@@ -529,7 +529,7 @@ class yuketang:
                     del self.lessonIdDict[lessonId][key]
         del_dict()
         uri = f"wss://{domain}/wsapp/"
-        async with websockets.connect(uri, ping_timeout=60, ping_interval=5) as websocket:
+        async with websockets.connect(uri, ping_timeout=150, ping_interval=5) as websocket:
             # 发送 "hello" 消息以建立连接
             hello_message = {
                 "op": "hello",
