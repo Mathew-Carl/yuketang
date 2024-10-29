@@ -614,13 +614,17 @@ class yuketang:
                             flag_ppt=0
                             self.fetch_presentation(lessonId)
                         
-                        await asyncio.wait_for(
-                            asyncio.gather(
-                                self.receive_messages(lessonId),
-                                self.fetch_answers(lessonId)
-                            ),
-                            timeout=420  # 设置超时时间为 7 分钟
-                        )
+                        try:
+                            await asyncio.wait_for(
+                                asyncio.gather(
+                                    self.receive_messages(lessonId),
+                                    self.fetch_answers(lessonId)
+                                ),
+                                timeout=420  # 设置超时时间为 7 分钟
+                            )
+                        except asyncio.TimeoutError:
+                            # 处理超时的情况，例如记录日志或者通知用户
+                            self.msgmgr.sendMsg(f"问题超时已取消")
                         self.stop_event.clear()
                         
                 elif op=="lessonfinished":
