@@ -433,7 +433,7 @@ class yuketang:
             qrcode_url=server_response['ticket']
             download_qrcode(qrcode_url, self.name)
             self.msgmgr.sendImage(f"{self.name}qrcode.jpg")
-            server_response = await asyncio.wait_for(recv_json(websocket),timeout=60)
+            server_response = await asyncio.wait_for(recv_json(websocket),timeout=180)
             self.weblogin(server_response['UserID'],server_response['Auth'])
             
     async def countdown(self, limit):
