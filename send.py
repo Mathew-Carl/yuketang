@@ -102,8 +102,6 @@ class SendManager:
 
     def sendMsg(self,msg):
         print(msg)
-        if not self.openId:
-            return
         if self.wx:
             get_wx_token()
             if WX_ACCESS_TOKEN:
