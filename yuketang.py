@@ -416,8 +416,6 @@ class yuketang:
                 if attempt <= retries:
                     await asyncio.sleep(delay)
                     print(f"出现异常, 尝试重试 ({attempt}/{retries})")
-            except asyncio.CancelledError:
-                print("操作已超时,等待下次尝试")
 
     async def ws_login(self):
         uri = f"wss://{domain}/wsapp/"
