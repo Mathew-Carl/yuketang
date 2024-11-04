@@ -416,10 +416,12 @@ class yuketang:
                 if attempt <= retries:
                     await asyncio.sleep(delay)
                     print(f"出现异常, 尝试重试 ({attempt}/{retries})")
+            except asyncio.CancelledError:
+                print("操作已超时,等待下次尝试")
 
     async def ws_login(self):
         uri = f"wss://{domain}/wsapp/"
-        async with websockets.connect(uri, ping_timeout=100, ping_interval=5) as websocket:
+        async with websockets.connect(uri, ping_timeout=180, ping_interval=5) as websocket:
             # 发送 "hello" 消息以建立连接
             hello_message = {
                 "op":"requestlogin",
@@ -433,7 +435,7 @@ class yuketang:
             qrcode_url=server_response['ticket']
             download_qrcode(qrcode_url, self.name)
             self.msgmgr.sendImage(f"{self.name}qrcode.jpg")
-            server_response = await asyncio.wait_for(recv_json(websocket),timeout=180)
+            server_response = await asyncio.wait_for(recv_json(websocket),timeout=60)
             self.weblogin(server_response['UserID'],server_response['Auth'])
             
     async def countdown(self, limit):
@@ -656,4 +658,4 @@ async def ykt_user(ykt):
         if ykt.getlesson():
             ykt.lesson_checkin()
             await ykt.lesson_attend()
-        await asyncio.sleep(30)
+        asyncio.sleep(30)
