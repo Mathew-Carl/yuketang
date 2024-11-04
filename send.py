@@ -102,6 +102,8 @@ class SendManager:
 
     def sendMsg(self,msg):
         print(msg)
+        if not self.openId:
+            return
         if self.wx:
             get_wx_token()
             if WX_ACCESS_TOKEN:
@@ -116,6 +118,8 @@ class SendManager:
                 send_fs_msg(msg_part(msg, fs_config['msgLimit']), self.openId)
     
     def sendImage(self,path):
+        if not self.openId:
+            return
         if self.wx:
             get_wx_token()
             if WX_ACCESS_TOKEN:
@@ -130,6 +134,8 @@ class SendManager:
                 send_fs_image(upload_fs_image(path), self.openId)
 
     def sendFile(self,path):
+        if not self.openId:
+            return
         if self.wx:
             get_wx_token()
             if WX_ACCESS_TOKEN:
